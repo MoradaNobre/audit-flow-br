@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle, Download, Search, Filter, ChevronUp, ChevronDown } from 'lucide-react';
 import { UploadModal } from '@/components/UploadModal';
 import { AdminActions } from '@/components/AdminActions';
 import { useCondominio } from '@/hooks/useCondominios';
 import { usePrestacoes } from '@/hooks/usePrestacoes';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { supabase } from '@/integrations/supabase/client';
 
 type StatusType = 'pendente' | 'processando' | 'concluido' | 'erro';
 
@@ -50,10 +53,52 @@ export default function Condominio() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  
+  // Estados para filtros e ordenação
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'month' | 'status'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Fetch data with React Query
   const { data: condominio, isLoading: condominioLoading, error: condominioError } = useCondominio(id || '');
   const { data: prestacoes, isLoading: prestacoesLoading } = usePrestacoes(id);
+
+  // Filtrar e ordenar prestações
+  const filteredAndSortedPrestacoes = useMemo(() => {
+    if (!prestacoes) return [];
+
+    let filtered = prestacoes.filter((prestacao) => {
+      const matchesSearch = searchTerm === '' || 
+        `${prestacao.mes_referencia}/${prestacao.ano_referencia}`.includes(searchTerm) ||
+        prestacao.id.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || prestacao.status_analise === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+
+    // Ordenação
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'month':
+          comparison = (a.ano_referencia * 12 + a.mes_referencia) - (b.ano_referencia * 12 + b.mes_referencia);
+          break;
+        case 'status':
+          comparison = a.status_analise.localeCompare(b.status_analise);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [prestacoes, searchTerm, statusFilter, sortBy, sortOrder]);
 
   if (condominioError || (!condominioLoading && !condominio)) {
     return (
@@ -69,9 +114,54 @@ export default function Condominio() {
     );
   }
 
-  const handleRowClick = (prestacao: any) => {
+  const handleRowClick = async (prestacao: any) => {
     if (prestacao.status_analise === 'concluido') {
-      navigate(`/relatorio/${prestacao.id}`);
+      try {
+        // Buscar o relatório correspondente à prestação
+        const { data: relatorio, error } = await supabase
+          .from('relatorios_auditoria')
+          .select('id')
+          .eq('prestacao_id', prestacao.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error('Erro ao buscar relatório:', error);
+          return;
+        }
+        
+        if (relatorio) {
+          navigate(`/relatorio/${relatorio.id}`);
+        } else {
+          console.log('Relatório não encontrado para prestação:', prestacao.id);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar relatório:', error);
+      }
+    }
+  };
+
+  const handleSort = (field: 'date' | 'month' | 'status') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: 'date' | 'month' | 'status' }) => {
+    if (sortBy !== field) return null;
+    return sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
+  };
+
+  const downloadPDF = (prestacao: any) => {
+    if (prestacao.arquivo_url) {
+      const link = document.createElement('a');
+      link.href = prestacao.arquivo_url;
+      link.download = `Prestacao_${prestacao.mes_referencia}_${prestacao.ano_referencia}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -183,21 +273,84 @@ export default function Condominio() {
           </Card>
         </div>
 
+        {/* Filtros e Busca */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filtros e Busca
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por mês/ano ou ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="processando">Processando</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
+                  <SelectItem value="erro">Erro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Tabela de prestações de contas */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-xl">Prestações de Contas</CardTitle>
             <CardDescription>
-              Histórico de todas as prestações de contas enviadas para análise
+              Histórico de todas as prestações de contas enviadas para análise. 
+              Mostrando {filteredAndSortedPrestacoes.length} de {prestacoes?.length || 0} registros.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mês/Ano de Referência</TableHead>
-                  <TableHead>Data de Upload</TableHead>
-                  <TableHead>Status da Análise</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('month')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Mês/Ano de Referência
+                      <SortIcon field="month" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('date')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Data de Upload
+                      <SortIcon field="date" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Status da Análise
+                      <SortIcon field="status" />
+                    </div>
+                  </TableHead>
                   <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -212,8 +365,8 @@ export default function Condominio() {
                       <TableCell><Skeleton className="h-8 w-24 mx-auto" /></TableCell>
                     </TableRow>
                   ))
-                ) : prestacoes && prestacoes.length > 0 ? (
-                  prestacoes.map((prestacao) => (
+                ) : filteredAndSortedPrestacoes && filteredAndSortedPrestacoes.length > 0 ? (
+                  filteredAndSortedPrestacoes.map((prestacao) => (
                     <TableRow 
                       key={prestacao.id}
                       className={`transition-colors ${
@@ -236,14 +389,43 @@ export default function Condominio() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex gap-2 justify-center">
-                          {prestacao.status_analise === 'concluido' && (
+                          {prestacao.arquivo_url && (
                             <Button
                               size="sm"
                               variant="outline"
                               className="gap-2"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/relatorio/${prestacao.id}`);
+                                downloadPDF(prestacao);
+                              }}
+                            >
+                              <Download className="h-4 w-4" />
+                              PDF
+                            </Button>
+                          )}
+                           {prestacao.status_analise === 'concluido' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-2"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const { data: relatorio, error } = await supabase
+                                    .from('relatorios_auditoria')
+                                    .select('id')
+                                    .eq('prestacao_id', prestacao.id)
+                                    .maybeSingle();
+                                    
+                                  if (error || !relatorio) {
+                                    console.error('Relatório não encontrado');
+                                    return;
+                                  }
+                                  
+                                  navigate(`/relatorio/${relatorio.id}`);
+                                } catch (error) {
+                                  console.error('Erro ao buscar relatório:', error);
+                                }
                               }}
                             >
                               <Eye className="h-4 w-4" />
@@ -255,7 +437,6 @@ export default function Condominio() {
                             id={prestacao.id}
                             name={`${prestacao.mes_referencia}/${prestacao.ano_referencia}`}
                             onAnalyze={() => {
-                              // Refresh data after analysis
                               window.location.reload();
                             }}
                           />

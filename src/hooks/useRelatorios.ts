@@ -59,13 +59,15 @@ export const useRelatorio = (id: string) => {
             condominio_id,
             mes_referencia,
             ano_referencia,
+            arquivo_url,
             condominios!inner(nome)
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Relatório não encontrado');
       return data as RelatorioAuditoria;
     },
     enabled: !!user && !!id,
