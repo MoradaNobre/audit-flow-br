@@ -85,12 +85,15 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
       {canAnalyze && (
         <Button
           variant="outline"
           size="sm"
-          onClick={handleAnalyze}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAnalyze();
+          }}
           disabled={analyzePrestacao.isPending}
           className="gap-2"
         >
@@ -106,12 +109,13 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
               variant="outline"
               size="sm"
               className="gap-2 text-destructive hover:text-destructive"
+              onClick={(e) => e.stopPropagation()}
             >
               <Trash2 className="h-4 w-4" />
               Remover
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
               <AlertDialogDescription>
@@ -120,9 +124,14 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                Cancelar
+              </AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 Remover
