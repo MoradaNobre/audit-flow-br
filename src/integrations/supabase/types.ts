@@ -249,6 +249,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_prestacoes: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      can_manage_condominios: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_user_condominios: {
         Args: { user_uuid: string }
         Returns: string[]

@@ -3,7 +3,7 @@ import { Trash2, BarChart3 } from "lucide-react";
 import { useDeleteCondominio } from "@/hooks/useCondominios";
 import { useDeletePrestacao, useAnalyzePrestacao } from "@/hooks/usePrestacoes";
 import { useDeleteRelatorio } from "@/hooks/useRelatorios";
-import { useIsAdmin } from "@/hooks/useRoles";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -25,7 +25,7 @@ interface AdminActionsProps {
 }
 
 export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) => {
-  const isAdmin = useIsAdmin();
+  const { isAdmin, canAnalyzePrestacoes, canDeleteCondominios, canDeleteRelatorios } = usePermissions();
   const { toast } = useToast();
   
   const deleteCondominio = useDeleteCondominio();
@@ -33,7 +33,15 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
   const deleteRelatorio = useDeleteRelatorio();
   const analyzePrestacao = useAnalyzePrestacao();
 
-  if (!isAdmin) return null;
+  // Verificar permissões específicas por tipo
+  const canDelete = (type === 'condominio' && canDeleteCondominios) ||
+                   (type === 'prestacao' && isAdmin) ||
+                   (type === 'relatorio' && canDeleteRelatorios);
+                   
+  const canAnalyze = type === 'prestacao' && canAnalyzePrestacoes;
+
+  // Se não tem nenhuma permissão, não mostra os botões
+  if (!canDelete && !canAnalyze) return null;
 
   const handleDelete = async () => {
     try {
@@ -78,7 +86,7 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
 
   return (
     <div className="flex gap-2">
-      {type === 'prestacao' && (
+      {canAnalyze && (
         <Button
           variant="outline"
           size="sm"
@@ -91,36 +99,38 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
         </Button>
       )}
       
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            Remover
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja remover {name ? `"${name}"` : 'este item'}? 
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+      {canDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-destructive hover:text-destructive"
             >
+              <Trash2 className="h-4 w-4" />
               Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja remover {name ? `"${name}"` : 'este item'}? 
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 };

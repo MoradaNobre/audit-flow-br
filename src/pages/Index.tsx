@@ -14,10 +14,11 @@ import { CreateCondominioModal } from '@/components/CreateCondominioModal';
 import { EditCondominioModal } from '@/components/EditCondominioModal';
 import { LLMSettingsDialog } from '@/components/LLMSettingsDialog';
 import { AdminActions } from '@/components/AdminActions';
-import { useIsAdmin } from '@/hooks/useRoles';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const permissions = usePermissions();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -26,7 +27,7 @@ const Index = () => {
   const [llmSettingsOpen, setLlmSettingsOpen] = useState(false);
   const [selectedCondominio, setSelectedCondominio] = useState<any>(null);
 
-  const isAdmin = useIsAdmin();
+  const { isAdmin, canCreateCondominios, canCreatePrestacoes } = permissions;
 
   // Fetch data with React Query
   const { data: condominios, isLoading: condominiosLoading, error: condominiosError } = useCondominios();
@@ -169,24 +170,38 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center gap-3">
-            <Button 
-              size="lg" 
-              className="gap-2 bg-primary hover:bg-primary/90"
-              onClick={() => setUploadModalOpen(true)}
-              disabled={!condominios || condominios.length === 0}
-            >
-              <Plus className="h-5 w-5" />
-              Iniciar Nova Análise
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="gap-2"
-              onClick={() => setCreateCondominioModalOpen(true)}
-            >
-              <Building2 className="h-5 w-5" />
-              Novo Condomínio
-            </Button>
+            {canCreatePrestacoes && (
+              <Button 
+                size="lg" 
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={() => setUploadModalOpen(true)}
+                disabled={!condominios || condominios.length === 0}
+              >
+                <Plus className="h-5 w-5" />
+                Iniciar Nova Análise
+              </Button>
+            )}
+            {canCreateCondominios && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="gap-2"
+                onClick={() => setCreateCondominioModalOpen(true)}
+              >
+                <Building2 className="h-5 w-5" />
+                Novo Condomínio
+              </Button>
+            )}
+            {(!canCreatePrestacoes && !canCreateCondominios) && (
+              <div className="text-center space-y-2">
+                <p className="text-muted-foreground">
+                  Você tem acesso apenas para visualizar condomínios e relatórios.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Entre em contato com um administrador para solicitar permissões adicionais.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -283,14 +298,16 @@ const Index = () => {
                     <p className="text-muted-foreground mb-4">
                       Comece criando seu primeiro condomínio para gerenciar prestações de contas.
                     </p>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setCreateCondominioModalOpen(true)}
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Criar Primeiro Condomínio
-                    </Button>
+                    {canCreateCondominios && (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setCreateCondominioModalOpen(true)}
+                        className="gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Criar Primeiro Condomínio
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
