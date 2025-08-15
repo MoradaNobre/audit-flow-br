@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Plus, BarChart3, FileText, Clock, Building2, AlertCircle, Settings, Edit3 } from 'lucide-react';
+import { LogOut, Plus, BarChart3, FileText, Clock, Building2, AlertCircle, Settings, Edit3, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useCondominios } from '@/hooks/useCondominios';
@@ -89,15 +89,26 @@ const Index = () => {
               <div className="flex gap-2">
                 <ThemeToggle />
                 {isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setLlmSettingsOpen(true)}
-                    className="gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Configurar LLM
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => navigate('/users')}
+                      className="gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      Usuários
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setLlmSettingsOpen(true)}
+                      className="gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Configurar LLM
+                    </Button>
+                  </>
                 )}
                 <Button 
                   variant="outline" 
