@@ -246,33 +246,7 @@ export type Database = {
       }
     }
     Views: {
-      admin_settings_safe: {
-        Row: {
-          api_key_encrypted: string | null
-          created_at: string | null
-          id: string | null
-          llm_model: string | null
-          llm_provider: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          api_key_encrypted?: never
-          created_at?: string | null
-          id?: string | null
-          llm_model?: string | null
-          llm_provider?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          api_key_encrypted?: never
-          created_at?: string | null
-          id?: string | null
-          llm_model?: string | null
-          llm_provider?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_user_condominios: {
