@@ -66,30 +66,58 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      if (file.type === 'application/pdf') {
-        setSelectedFile(file);
-      } else {
+      
+      // Check file type
+      if (file.type !== 'application/pdf') {
         toast({
           variant: "destructive",
           title: "Arquivo inválido",
           description: "Por favor, selecione apenas arquivos PDF."
         });
+        return;
       }
+      
+      // Check file size (100MB = 104857600 bytes)
+      const maxSize = 104857600; // 100MB
+      if (file.size > maxSize) {
+        toast({
+          variant: "destructive",
+          title: "Arquivo muito grande",
+          description: `O arquivo deve ter no máximo 100MB. Tamanho atual: ${(file.size / 1024 / 1024).toFixed(2)}MB`
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
     }
   }, [toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.type === 'application/pdf') {
-        setSelectedFile(file);
-      } else {
+      
+      // Check file type
+      if (file.type !== 'application/pdf') {
         toast({
           variant: "destructive",
           title: "Arquivo inválido",
           description: "Por favor, selecione apenas arquivos PDF."
         });
+        return;
       }
+      
+      // Check file size (100MB = 104857600 bytes)
+      const maxSize = 104857600; // 100MB
+      if (file.size > maxSize) {
+        toast({
+          variant: "destructive",
+          title: "Arquivo muito grande",
+          description: `O arquivo deve ter no máximo 100MB. Tamanho atual: ${(file.size / 1024 / 1024).toFixed(2)}MB`
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
     }
   };
 
@@ -97,14 +125,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
     
+    console.log(`Iniciando upload de arquivo: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+    
     const { data, error } = await supabase.storage
       .from('prestacoes-pdf')
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
     
     if (error) {
+      console.error('Erro no upload:', error);
       throw new Error(`Erro no upload: ${error.message}`);
     }
     
+    console.log('Upload concluído com sucesso:', data);
     return fileName; // Return the file path for storage
   };
 
@@ -122,8 +157,15 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     setUploadProgress(0);
 
     try {
-      // Upload real file to Supabase Storage
-      setUploadProgress(30);
+      // Validate file size before upload
+      const maxSize = 104857600; // 100MB
+      if (selectedFile.size > maxSize) {
+        throw new Error(`Arquivo muito grande. Máximo permitido: 100MB. Tamanho atual: ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB`);
+      }
+
+      // Upload real file to Supabase Storage with progress tracking
+      setUploadProgress(10);
+      
       const fileName = await uploadToSupabase(selectedFile);
       
       setUploadProgress(70);
@@ -252,6 +294,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                     <p className="font-medium text-foreground">{selectedFile.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      {selectedFile.size > 52428800 && ( // Show warning for files > 50MB
+                        <span className="text-orange-500 ml-2">• Arquivo grande</span>
+                      )}
                     </p>
                   </div>
                   <Button
