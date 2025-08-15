@@ -84,33 +84,23 @@ export default function Users() {
     queryKey: ['users-with-associations'],
     queryFn: async () => {
       try {
-        // Get all users from profiles
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, nome_completo, created_at');
+        console.log('Starting users fetch...');
         
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
-          throw profilesError;
+        // Use the new function to get all users (bypasses RLS issues)
+        const { data: usersWithRoles, error: usersError } = await supabase
+          .rpc('get_all_users_for_admin');
+        
+        if (usersError) {
+          console.error('Error fetching users:', usersError);
+          throw usersError;
         }
         
-        if (!profiles || profiles.length === 0) {
-          console.log('No profiles found');
+        if (!usersWithRoles || usersWithRoles.length === 0) {
+          console.log('No users found');
           return [];
         }
 
-        console.log('Found profiles:', profiles);
-
-        // Get user roles
-        const { data: roles, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('user_id, role');
-        
-        if (rolesError) {
-          console.error('Error fetching roles:', rolesError);
-        }
-
-        console.log('Found roles:', roles);
+        console.log('Found users:', usersWithRoles);
 
         // Get user associations with condominios
         const { data: associations } = await supabase
@@ -127,22 +117,20 @@ export default function Users() {
         console.log('Found condominios:', condominiosData);
 
         // Create users array with safe data access
-        const usersData: User[] = profiles.map(profile => {
-          const userRole = roles?.find(r => r.user_id === profile.user_id);
-          const userAssociations = associations?.filter(a => a.user_id === profile.user_id) || [];
+        const usersData: User[] = usersWithRoles.map(userInfo => {
+          const userAssociations = associations?.filter(a => a.user_id === userInfo.user_id) || [];
           
-          console.log(`Processing user ${profile.user_id}:`, {
-            profile,
-            userRole,
+          console.log(`Processing user ${userInfo.user_id}:`, {
+            userInfo,
             userAssociations
           });
           
           return {
-            id: profile.user_id,
-            email: `user_${profile.user_id.slice(-8)}@email.com`, // Placeholder email
-            nome_completo: profile.nome_completo || 'Nome não informado',
-            created_at: profile.created_at,
-            role: (userRole?.role as 'admin' | 'auditor' | 'condomino') || 'condomino',
+            id: userInfo.user_id,
+            email: userInfo.nome_completo || `user_${userInfo.user_id.toString().slice(-8)}`, // Use nome_completo as fallback
+            nome_completo: userInfo.nome_completo || 'Nome não informado',
+            created_at: userInfo.created_at,
+            role: (userInfo.role as 'admin' | 'auditor' | 'condomino') || 'condomino',
             condominios: userAssociations.map(a => {
               const condominioInfo = condominiosData?.find(c => c.id === a.condominio_id);
               return {

@@ -254,6 +254,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      get_all_users_for_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          nome_completo: string
+          role: string
+          user_id: string
+        }[]
+      }
       get_user_condominios: {
         Args: { user_uuid: string }
         Returns: string[]
