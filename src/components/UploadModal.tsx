@@ -170,12 +170,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       
       setUploadProgress(70);
       
-      // Criar prestação no banco com caminho do arquivo
+      // Criar prestação no banco com caminho do arquivo e tamanho
       await createPrestacao.mutateAsync({
         condominio_id: condominioId,
         mes_referencia: parseInt(mes),
         ano_referencia: parseInt(ano),
-        arquivo_url: fileName // Store the file path
+        arquivo_url: fileName, // Store the file path
+        arquivo_tamanho: selectedFile.size // Store file size in bytes
       });
 
       setUploadProgress(100);

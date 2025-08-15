@@ -129,6 +129,7 @@ export type Database = {
       prestacoes_contas: {
         Row: {
           ano_referencia: number
+          arquivo_tamanho: number | null
           arquivo_url: string | null
           condominio_id: string
           created_at: string
@@ -139,6 +140,7 @@ export type Database = {
         }
         Insert: {
           ano_referencia: number
+          arquivo_tamanho?: number | null
           arquivo_url?: string | null
           condominio_id: string
           created_at?: string
@@ -149,6 +151,7 @@ export type Database = {
         }
         Update: {
           ano_referencia?: number
+          arquivo_tamanho?: number | null
           arquivo_url?: string | null
           condominio_id?: string
           created_at?: string

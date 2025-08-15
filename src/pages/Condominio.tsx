@@ -388,31 +388,33 @@ export default function Condominio() {
                       Data de Upload
                       <SortIcon field="date" />
                     </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('status')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status da Análise
-                      <SortIcon field="status" />
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {prestacoesLoading ? (
-                  // Loading rows
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-8 w-24 mx-auto" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredAndSortedPrestacoes && filteredAndSortedPrestacoes.length > 0 ? (
+                   </TableHead>
+                   <TableHead>Tamanho do Arquivo</TableHead>
+                   <TableHead 
+                     className="cursor-pointer hover:bg-muted/50 select-none"
+                     onClick={() => handleSort('status')}
+                   >
+                     <div className="flex items-center gap-2">
+                       Status da Análise
+                       <SortIcon field="status" />
+                     </div>
+                   </TableHead>
+                   <TableHead className="text-center">Ações</TableHead>
+                 </TableRow>
+               </TableHeader>
+               <TableBody>
+                 {prestacoesLoading ? (
+                   // Loading rows
+                   Array.from({ length: 3 }).map((_, i) => (
+                     <TableRow key={i}>
+                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                       <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                       <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                       <TableCell><Skeleton className="h-8 w-24 mx-auto" /></TableCell>
+                     </TableRow>
+                   ))
+                 ) : filteredAndSortedPrestacoes && filteredAndSortedPrestacoes.length > 0 ? (
                   filteredAndSortedPrestacoes.map((prestacao) => (
                     <TableRow 
                       key={prestacao.id}
@@ -426,21 +428,27 @@ export default function Condominio() {
                       <TableCell className="font-medium">
                         {prestacao.mes_referencia.toString().padStart(2, '0')}/{prestacao.ano_referencia}
                       </TableCell>
-                      <TableCell>
-                        {new Date(prestacao.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(prestacao.status_analise)}>
-                          {getStatusText(prestacao.status_analise)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex gap-2 justify-center">
-                          {prestacao.arquivo_url && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-2"
+                       <TableCell>
+                         {new Date(prestacao.created_at).toLocaleDateString('pt-BR')}
+                       </TableCell>
+                       <TableCell>
+                         {prestacao.arquivo_tamanho ? 
+                           `${(prestacao.arquivo_tamanho / 1024 / 1024).toFixed(2)} MB` : 
+                           'N/A'
+                         }
+                       </TableCell>
+                       <TableCell>
+                         <Badge className={getStatusColor(prestacao.status_analise)}>
+                           {getStatusText(prestacao.status_analise)}
+                         </Badge>
+                       </TableCell>
+                       <TableCell className="text-center">
+                         <div className="flex gap-2 justify-center">
+                           {prestacao.arquivo_url && (
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               className="gap-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 downloadPDF(prestacao);
@@ -507,11 +515,11 @@ export default function Condominio() {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
-                      <div className="text-muted-foreground">
-                        <Upload className="h-8 w-8 mx-auto mb-2" />
+                 ) : (
+                   <TableRow>
+                     <TableCell colSpan={5} className="text-center py-8">
+                       <div className="text-muted-foreground">
+                         <Upload className="h-8 w-8 mx-auto mb-2" />
                         <p>Nenhuma prestação de contas encontrada</p>
                         <p className="text-sm">Faça o primeiro upload para começar</p>
                       </div>

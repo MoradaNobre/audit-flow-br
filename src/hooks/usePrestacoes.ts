@@ -9,6 +9,7 @@ export interface PrestacaoContas {
   ano_referencia: number;
   status_analise: 'pendente' | 'processando' | 'concluido' | 'erro';
   arquivo_url?: string;
+  arquivo_tamanho?: number;
   uploaded_by?: string;
   created_at: string;
 }
@@ -49,6 +50,7 @@ export const useCreatePrestacao = () => {
       mes_referencia: number;
       ano_referencia: number;
       arquivo_url?: string;
+      arquivo_tamanho?: number;
     }) => {
       if (!user) throw new Error('User not authenticated');
 
