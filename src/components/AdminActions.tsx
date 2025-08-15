@@ -22,9 +22,10 @@ interface AdminActionsProps {
   id: string;
   name?: string;
   onAnalyze?: () => void;
+  statusAnalise?: string; // Adicionar status para controlar visibilidade
 }
 
-export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) => {
+export const AdminActions = ({ type, id, name, onAnalyze, statusAnalise }: AdminActionsProps) => {
   const { isAdmin, canAnalyzePrestacoes, canDeleteCondominios, canDeleteRelatorios } = usePermissions();
   const { toast } = useToast();
   
@@ -38,7 +39,8 @@ export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) =
                    (type === 'prestacao' && isAdmin) ||
                    (type === 'relatorio' && canDeleteRelatorios);
                    
-  const canAnalyze = type === 'prestacao' && canAnalyzePrestacoes;
+  // Só mostra botão analisar se não está pendente (evita duplicação)
+  const canAnalyze = type === 'prestacao' && canAnalyzePrestacoes && statusAnalise !== 'pendente';
 
   // Se não tem nenhuma permissão, não mostra os botões
   if (!canDelete && !canAnalyze) return null;

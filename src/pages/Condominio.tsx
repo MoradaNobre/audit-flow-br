@@ -498,6 +498,7 @@ export default function Condominio() {
                              type="prestacao"
                              id={prestacao.id}
                              name={`${prestacao.mes_referencia}/${prestacao.ano_referencia}`}
+                             statusAnalise={prestacao.status_analise}
                              onAnalyze={() => {
                                window.location.reload();
                              }}

@@ -165,7 +165,15 @@ export default function Relatorio() {
   }
 
   // Use real data if available, fallback to mock for presentation
-  const reportData = relatorio.conteudo_gerado || mockRelatorio;
+  const reportData = relatorio?.conteudo_gerado && Object.keys(relatorio.conteudo_gerado).length > 0 
+    ? relatorio.conteudo_gerado 
+    : mockRelatorio;
+
+  console.log('Dados do relatório:', {
+    relatorio: relatorio,
+    conteudo_gerado: relatorio?.conteudo_gerado,
+    usando_dados_reais: !!(relatorio?.conteudo_gerado && Object.keys(relatorio.conteudo_gerado).length > 0)
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
