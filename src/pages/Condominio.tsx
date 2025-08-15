@@ -8,11 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle, Download, Search, Filter, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle, Download, Search, Filter, ChevronUp, ChevronDown, Play } from 'lucide-react';
 import { UploadModal } from '@/components/UploadModal';
 import { AdminActions } from '@/components/AdminActions';
 import { useCondominio } from '@/hooks/useCondominios';
-import { usePrestacoes } from '@/hooks/usePrestacoes';
+import { usePrestacoes, useAnalyzePrestacao } from '@/hooks/usePrestacoes';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +55,7 @@ export default function Condominio() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { canCreatePrestacoes } = usePermissions();
+  const { canCreatePrestacoes, canAnalyzePrestacoes } = usePermissions();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   
   // Estados para filtros e ordenação
@@ -67,6 +67,7 @@ export default function Condominio() {
   // Fetch data with React Query
   const { data: condominio, isLoading: condominioLoading, error: condominioError } = useCondominio(id || '');
   const { data: prestacoes, isLoading: prestacoesLoading } = usePrestacoes(id);
+  const analyzePrestacao = useAnalyzePrestacao();
 
   // Filtrar e ordenar prestações
   const filteredAndSortedPrestacoes = useMemo(() => {
@@ -189,6 +190,23 @@ export default function Condominio() {
           variant: "destructive",
         });
       }
+    }
+  };
+
+  const handleAnalyze = async (prestacaoId: string) => {
+    try {
+      await analyzePrestacao.mutateAsync(prestacaoId);
+      toast({
+        title: "Análise iniciada",
+        description: "A análise da prestação de contas foi iniciada. Aguarde alguns momentos.",
+      });
+    } catch (error) {
+      console.error('Erro ao iniciar análise:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao iniciar a análise. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -431,44 +449,59 @@ export default function Condominio() {
                               <Download className="h-4 w-4" />
                               PDF
                             </Button>
-                          )}
+                           )}
+                           {prestacao.status_analise === 'pendente' && canAnalyzePrestacoes && (
+                             <Button
+                               size="sm"
+                               variant="default"
+                               className="gap-2"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleAnalyze(prestacao.id);
+                               }}
+                               disabled={analyzePrestacao.isPending}
+                             >
+                               <Play className="h-4 w-4" />
+                               Analisar
+                             </Button>
+                           )}
                            {prestacao.status_analise === 'concluido' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-2"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                  const { data: relatorio, error } = await supabase
-                                    .from('relatorios_auditoria')
-                                    .select('id')
-                                    .eq('prestacao_id', prestacao.id)
-                                    .maybeSingle();
-                                    
-                                  if (error || !relatorio) {
-                                    console.error('Relatório não encontrado');
-                                    return;
-                                  }
-                                  
-                                  navigate(`/relatorio/${relatorio.id}`);
-                                } catch (error) {
-                                  console.error('Erro ao buscar relatório:', error);
-                                }
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                              Ver Relatório
-                            </Button>
-                          )}
-                          <AdminActions 
-                            type="prestacao"
-                            id={prestacao.id}
-                            name={`${prestacao.mes_referencia}/${prestacao.ano_referencia}`}
-                            onAnalyze={() => {
-                              window.location.reload();
-                            }}
-                          />
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               className="gap-2"
+                               onClick={async (e) => {
+                                 e.stopPropagation();
+                                 try {
+                                   const { data: relatorio, error } = await supabase
+                                     .from('relatorios_auditoria')
+                                     .select('id')
+                                     .eq('prestacao_id', prestacao.id)
+                                     .maybeSingle();
+                                     
+                                   if (error || !relatorio) {
+                                     console.error('Relatório não encontrado');
+                                     return;
+                                   }
+                                   
+                                   navigate(`/relatorio/${relatorio.id}`);
+                                 } catch (error) {
+                                   console.error('Erro ao buscar relatório:', error);
+                                 }
+                               }}
+                             >
+                               <Eye className="h-4 w-4" />
+                               Ver Relatório
+                             </Button>
+                           )}
+                           <AdminActions 
+                             type="prestacao"
+                             id={prestacao.id}
+                             name={`${prestacao.mes_referencia}/${prestacao.ano_referencia}`}
+                             onAnalyze={() => {
+                               window.location.reload();
+                             }}
+                           />
                         </div>
                       </TableCell>
                     </TableRow>
