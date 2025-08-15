@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -130,6 +131,11 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
+      {/* Theme toggle - positioned at top right */}
+      <div className="fixed top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
+      
       <div className="w-full max-w-md space-y-8">
         {/* Logo and branding */}
         <div className="text-center space-y-4">

@@ -11,6 +11,7 @@ import { UploadModal } from '@/components/UploadModal';
 import { AdminActions } from '@/components/AdminActions';
 import { useCondominio } from '@/hooks/useCondominios';
 import { usePrestacoes } from '@/hooks/usePrestacoes';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type StatusType = 'pendente' | 'processando' | 'concluido' | 'erro';
 
@@ -116,6 +117,7 @@ export default function Condominio() {
               <div className="text-right">
                 <p className="text-sm font-medium text-foreground">{user?.email}</p>
               </div>
+              <ThemeToggle />
               <Button 
                 onClick={() => setUploadModalOpen(true)}
                 className="gap-2"

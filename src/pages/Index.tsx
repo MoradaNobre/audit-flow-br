@@ -15,6 +15,7 @@ import { EditCondominioModal } from '@/components/EditCondominioModal';
 import { LLMSettingsDialog } from '@/components/LLMSettingsDialog';
 import { AdminActions } from '@/components/AdminActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -86,6 +87,7 @@ const Index = () => {
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <div className="flex gap-2">
+                <ThemeToggle />
                 {isAdmin && (
                   <Button 
                     variant="outline" 

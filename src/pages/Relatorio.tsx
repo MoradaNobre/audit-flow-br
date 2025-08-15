@@ -8,6 +8,7 @@ import { ArrowLeft, BarChart3, PieChart, AlertTriangle, CheckCircle, Download } 
 import { Cell, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useRelatorio } from '@/hooks/useRelatorios';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -199,10 +200,13 @@ export default function Relatorio() {
                 <p className="text-sm font-medium text-foreground">dna1973@gmail.com</p>
                 <p className="text-xs text-muted-foreground">Relatório Gerado</p>
               </div>
-              <Button onClick={exportToPDF} className="gap-2">
-                <Download className="h-4 w-4" />
-                Exportar PDF
-              </Button>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Button onClick={exportToPDF} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Exportar PDF
+                </Button>
+              </div>
             </div>
           </div>
         </div>
