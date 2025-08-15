@@ -15,6 +15,7 @@ import { useCondominio } from '@/hooks/useCondominios';
 import { usePrestacoes } from '@/hooks/usePrestacoes';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type StatusType = 'pendente' | 'processando' | 'concluido' | 'erro';
 
@@ -52,6 +53,7 @@ export default function Condominio() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   
   // Estados para filtros e ordenação
@@ -154,14 +156,37 @@ export default function Condominio() {
     return sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   };
 
-  const downloadPDF = (prestacao: any) => {
+  const downloadPDF = async (prestacao: any) => {
     if (prestacao.arquivo_url) {
-      const link = document.createElement('a');
-      link.href = prestacao.arquivo_url;
-      link.download = `Prestacao_${prestacao.mes_referencia}_${prestacao.ano_referencia}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        // If it's already a full URL, use it directly
+        if (prestacao.arquivo_url.startsWith('http')) {
+          window.open(prestacao.arquivo_url, '_blank');
+          return;
+        }
+        
+        // Otherwise, get the public URL from Supabase Storage
+        const { data } = supabase.storage
+          .from('prestacoes-pdf')
+          .getPublicUrl(prestacao.arquivo_url);
+        
+        if (data?.publicUrl) {
+          window.open(data.publicUrl, '_blank');
+        } else {
+          toast({
+            title: "Erro",
+            description: "Não foi possível acessar o arquivo PDF.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao baixar PDF:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao baixar o arquivo PDF.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

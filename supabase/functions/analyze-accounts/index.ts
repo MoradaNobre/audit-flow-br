@@ -72,12 +72,26 @@ serve(async (req) => {
 
     console.log('Iniciando análise para prestação:', prestacaoId);
 
+    // Get the PDF file URL from Supabase Storage
+    let documentUrl = prestacao.arquivo_url;
+    
+    // If the arquivo_url is not a full URL, construct the Supabase Storage URL
+    if (documentUrl && !documentUrl.startsWith('http')) {
+      const { data: urlData } = supabase.storage
+        .from('prestacoes-pdf')
+        .getPublicUrl(documentUrl);
+      
+      if (urlData?.publicUrl) {
+        documentUrl = urlData.publicUrl;
+      }
+    }
+
     // Extract real data from PDF using Document AI
     let extractedData;
     try {
-      console.log('Calling extract-pdf-data function...');
+      console.log('Calling extract-pdf-data function with URL:', documentUrl);
       const { data: extractionResult, error: extractionError } = await supabase.functions.invoke('extract-pdf-data', {
-        body: { documentUrl: prestacao.arquivo_url }
+        body: { documentUrl }
       });
 
       if (extractionError) {

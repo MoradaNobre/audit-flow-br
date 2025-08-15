@@ -8,6 +8,7 @@ import { Upload, FileText, X, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCreatePrestacao } from '@/hooks/usePrestacoes';
 import { Condominio } from '@/hooks/useCondominios';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UploadModalProps {
   open: boolean;
@@ -92,12 +93,27 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     }
   };
 
+  const uploadToSupabase = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from('prestacoes-pdf')
+      .upload(fileName, file);
+    
+    if (error) {
+      throw new Error(`Erro no upload: ${error.message}`);
+    }
+    
+    return fileName; // Return the file path for storage
+  };
+
   const simulateUpload = async () => {
-    if (!condominioId) {
+    if (!condominioId || !selectedFile) {
       toast({
         variant: "destructive",
-        title: "Condomínio não selecionado",
-        description: "Por favor, selecione um condomínio."
+        title: "Campos obrigatórios",
+        description: "Por favor, selecione um condomínio e arquivo."
       });
       return;
     }
@@ -106,19 +122,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     setUploadProgress(0);
 
     try {
-      // Simular progresso de upload
-      for (let i = 0; i <= 100; i += 10) {
-        setUploadProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-
-      // Criar prestação no banco
+      // Upload real file to Supabase Storage
+      setUploadProgress(30);
+      const fileName = await uploadToSupabase(selectedFile);
+      
+      setUploadProgress(70);
+      
+      // Criar prestação no banco com caminho do arquivo
       await createPrestacao.mutateAsync({
         condominio_id: condominioId,
         mes_referencia: parseInt(mes),
         ano_referencia: parseInt(ano),
-        arquivo_url: `uploads/${selectedFile?.name || 'documento.pdf'}`
+        arquivo_url: fileName // Store the file path
       });
+
+      setUploadProgress(100);
 
       toast({
         title: "Upload concluído!",
