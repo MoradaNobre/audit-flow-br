@@ -89,35 +89,58 @@ export default function Users() {
           .from('profiles')
           .select('user_id, nome_completo, created_at');
         
-        if (profilesError) throw profilesError;
-        if (!profiles) return [];
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          throw profilesError;
+        }
+        
+        if (!profiles || profiles.length === 0) {
+          console.log('No profiles found');
+          return [];
+        }
+
+        console.log('Found profiles:', profiles);
 
         // Get user roles
         const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('user_id, role');
         
-        if (rolesError) throw rolesError;
+        if (rolesError) {
+          console.error('Error fetching roles:', rolesError);
+        }
+
+        console.log('Found roles:', roles);
 
         // Get user associations with condominios
         const { data: associations } = await supabase
           .from('associacoes_usuarios_condominios')
           .select('user_id, papel, condominio_id');
 
+        console.log('Found associations:', associations);
+
         // Get condominios data
         const { data: condominiosData } = await supabase
           .from('condominios')
           .select('id, nome');
+
+        console.log('Found condominios:', condominiosData);
 
         // Create users array with safe data access
         const usersData: User[] = profiles.map(profile => {
           const userRole = roles?.find(r => r.user_id === profile.user_id);
           const userAssociations = associations?.filter(a => a.user_id === profile.user_id) || [];
           
+          console.log(`Processing user ${profile.user_id}:`, {
+            profile,
+            userRole,
+            userAssociations
+          });
+          
           return {
             id: profile.user_id,
-            email: profile.nome_completo || 'N/A', // Will be updated with real email later
-            nome_completo: profile.nome_completo || 'N/A',
+            email: `user_${profile.user_id.slice(-8)}@email.com`, // Placeholder email
+            nome_completo: profile.nome_completo || 'Nome não informado',
             created_at: profile.created_at,
             role: (userRole?.role as 'admin' | 'auditor' | 'condomino') || 'condomino',
             condominios: userAssociations.map(a => {
@@ -131,9 +154,10 @@ export default function Users() {
           };
         });
 
+        console.log('Final users data:', usersData);
         return usersData;
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error in users query:', error);
         return [];
       }
     },
