@@ -246,7 +246,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_settings_safe: {
+        Row: {
+          api_key_encrypted: string | null
+          created_at: string | null
+          id: string | null
+          llm_model: string | null
+          llm_provider: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key_encrypted?: never
+          created_at?: string | null
+          id?: string | null
+          llm_model?: string | null
+          llm_provider?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key_encrypted?: never
+          created_at?: string | null
+          id?: string | null
+          llm_model?: string | null
+          llm_provider?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_condominios: {
@@ -256,6 +282,10 @@ export type Database = {
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
+      }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       user_has_condominio_access: {
         Args: { cond_id: string; user_uuid: string }
