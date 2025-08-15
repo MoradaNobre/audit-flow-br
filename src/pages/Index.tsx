@@ -33,13 +33,13 @@ const Index = () => {
   const { data: prestacoes, isLoading: prestacoesLoading } = usePrestacoes();
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao sair",
-        description: error.message
-      });
+    try {
+      await signOut();
+      // O signOut já cuida do redirecionamento e limpeza
+    } catch (error) {
+      console.error('Erro durante logout:', error);
+      // Mesmo com erro, força o redirecionamento
+      window.location.href = '/auth';
     }
   };
 

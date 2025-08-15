@@ -77,8 +77,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      // Primeiro limpa o estado local
+      setUser(null);
+      setSession(null);
+      
+      // Limpa o localStorage de todas as chaves relacionadas ao Supabase
+      const cleanupAuthState = () => {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // Limpa sessionStorage também se existir
+        if (typeof sessionStorage !== 'undefined') {
+          Object.keys(sessionStorage).forEach((key) => {
+            if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+              sessionStorage.removeItem(key);
+            }
+          });
+        }
+      };
+      
+      cleanupAuthState();
+      
+      // Tenta fazer logout no Supabase, mas não falha se der erro
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (supabaseError) {
+        console.log('Erro no logout do Supabase (ignorado):', supabaseError);
+      }
+      
+      // Força uma atualização completa da página para garantir estado limpo
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Erro durante logout:', error);
+      // Mesmo com erro, redireciona para auth
+      window.location.href = '/auth';
+      return { error: null }; // Não retorna erro para o usuário
+    }
   };
 
   const value = {
