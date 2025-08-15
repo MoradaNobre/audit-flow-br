@@ -45,12 +45,16 @@ export const CreateCondominioModal: React.FC<CreateCondominioModalProps> = ({
       return;
     }
 
+    console.log('Tentando criar condomínio:', formData);
+
     try {
-      await createCondominio.mutateAsync({
+      const result = await createCondominio.mutateAsync({
         nome: formData.nome.trim(),
         cnpj: formData.cnpj.trim() || undefined,
         endereco: formData.endereco.trim() || undefined
       });
+
+      console.log('Condomínio criado com sucesso:', result);
 
       toast({
         title: "Condomínio criado com sucesso!",
@@ -61,6 +65,12 @@ export const CreateCondominioModal: React.FC<CreateCondominioModalProps> = ({
       setFormData({ nome: '', cnpj: '', endereco: '' });
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Erro detalhado ao criar condomínio:', error);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      console.error('Error code:', error.code);
+      
       toast({
         variant: "destructive",
         title: "Erro ao criar condomínio",
