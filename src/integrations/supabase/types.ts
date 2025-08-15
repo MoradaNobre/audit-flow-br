@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          api_key_encrypted: string | null
+          created_at: string
+          id: string
+          llm_model: string
+          llm_provider: string
+          updated_at: string
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          created_at?: string
+          id?: string
+          llm_model?: string
+          llm_provider?: string
+          updated_at?: string
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          created_at?: string
+          id?: string
+          llm_model?: string
+          llm_provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       associacoes_usuarios_condominios: {
         Row: {
           condominio_id: string

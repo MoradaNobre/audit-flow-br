@@ -57,11 +57,16 @@ serve(async (req) => {
       arquivo_url: prestacao.arquivo_url
     };
 
-    // Call OpenAI API for analysis
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key não configurada');
-    }
+    // Load admin LLM settings (default to Gemini Flash)
+    const { data: settings } = await supabase
+      .from('admin_settings')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const provider = (settings?.llm_provider as 'gemini' | 'openai') ?? 'gemini';
+    const model = settings?.llm_model ?? (provider === 'gemini' ? 'gemini-2.0-flash-exp' : 'gpt-4o-mini');
 
     const analysisPrompt = `
 Analise os dados financeiros do condomínio abaixo e identifique possíveis inconsistências ou irregularidades:
@@ -92,35 +97,57 @@ Formato de resposta em JSON:
 }
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Você é um auditor especializado em análise de prestações de contas de condomínios. Sempre responda em JSON válido e em português.'
-          },
-          {
-            role: 'user',
-            content: analysisPrompt
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.3
-      }),
-    });
+    let analysisResult: any;
 
-    if (!response.ok) {
-      throw new Error(`Erro na API OpenAI: ${response.status}`);
+    if (provider === 'gemini') {
+      const geminiKey = Deno.env.get('GEMINI_API_KEY');
+      if (!geminiKey) throw new Error('Gemini API key não configurada');
+
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}` , {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{
+                text: 'Você é um auditor especializado em prestações de contas de condomínios. Sempre responda em JSON válido e em português.\n' + analysisPrompt
+              }]
+            }
+          ]
+        })
+      });
+
+      if (!geminiRes.ok) throw new Error(`Erro na API Gemini: ${geminiRes.status}`);
+      const geminiJson = await geminiRes.json();
+      const text = (geminiJson.candidates?.[0]?.content?.parts || [])
+        .map((p: any) => p.text)
+        .join('');
+      analysisResult = JSON.parse(text);
+    } else {
+      const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!openAIApiKey) throw new Error('OpenAI API key não configurada');
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'Você é um auditor especializado em análise de prestações de contas de condomínios. Sempre responda em JSON válido e em português.' },
+            { role: 'user', content: analysisPrompt }
+          ],
+          max_tokens: 2000,
+          temperature: 0.3
+        }),
+      });
+      if (!response.ok) throw new Error(`Erro na API OpenAI: ${response.status}`);
+      const aiResponse = await response.json();
+      analysisResult = JSON.parse(aiResponse.choices[0].message.content);
     }
-
-    const aiResponse = await response.json();
-    const analysisResult = JSON.parse(aiResponse.choices[0].message.content);
 
     console.log('Análise concluída:', analysisResult);
 

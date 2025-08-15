@@ -3,7 +3,7 @@ import { Trash2, BarChart3 } from "lucide-react";
 import { useDeleteCondominio } from "@/hooks/useCondominios";
 import { useDeletePrestacao, useAnalyzePrestacao } from "@/hooks/usePrestacoes";
 import { useDeleteRelatorio } from "@/hooks/useRelatorios";
-import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useRoles";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -25,16 +25,13 @@ interface AdminActionsProps {
 }
 
 export const AdminActions = ({ type, id, name, onAnalyze }: AdminActionsProps) => {
-  const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const { toast } = useToast();
   
   const deleteCondominio = useDeleteCondominio();
   const deletePrestacao = useDeletePrestacao();
   const deleteRelatorio = useDeleteRelatorio();
   const analyzePrestacao = useAnalyzePrestacao();
-
-  // Check if user is admin
-  const isAdmin = user?.email === 'dna1973@gmail.com'; // Temporary check - should use proper role check
 
   if (!isAdmin) return null;
 
