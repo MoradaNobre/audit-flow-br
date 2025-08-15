@@ -18,7 +18,7 @@ export const useAdminSettings = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('admin_settings')
-        .select('*')
+        .select('id, llm_provider, llm_model, created_at, updated_at')
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -37,7 +37,7 @@ export const useUpsertAdminSettings = () => {
       const { data, error } = await supabase
         .from('admin_settings')
         .upsert(values, { onConflict: 'id' })
-        .select()
+        .select('id, llm_provider, llm_model, created_at, updated_at')
         .single();
       if (error) throw error;
       return data as AdminSettings;

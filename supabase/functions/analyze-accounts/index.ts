@@ -126,7 +126,7 @@ serve(async (req) => {
     // Load admin LLM settings (default to Gemini Flash)
     const { data: settings } = await supabase
       .from('admin_settings')
-      .select('*')
+      .select('llm_provider, llm_model')
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
