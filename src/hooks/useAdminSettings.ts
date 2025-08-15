@@ -8,6 +8,7 @@ export interface AdminSettings {
   llm_model: string;
   created_at: string;
   updated_at: string;
+  // Note: API keys are now stored securely in Supabase Secrets, not in the database
 }
 
 export const useAdminSettings = () => {

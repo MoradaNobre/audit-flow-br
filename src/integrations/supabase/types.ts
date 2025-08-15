@@ -16,7 +16,6 @@ export type Database = {
     Tables: {
       admin_settings: {
         Row: {
-          api_key_encrypted: string | null
           created_at: string
           id: string
           llm_model: string
@@ -24,7 +23,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          api_key_encrypted?: string | null
           created_at?: string
           id?: string
           llm_model?: string
@@ -32,7 +30,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          api_key_encrypted?: string | null
           created_at?: string
           id?: string
           llm_model?: string
