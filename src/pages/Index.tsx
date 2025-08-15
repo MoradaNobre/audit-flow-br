@@ -4,14 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Plus, BarChart3, FileText, Clock, Building2, AlertCircle } from 'lucide-react';
+import { LogOut, Plus, BarChart3, FileText, Clock, Building2, AlertCircle, Settings, Edit3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useCondominios } from '@/hooks/useCondominios';
 import { usePrestacoes } from '@/hooks/usePrestacoes';
 import { UploadModal } from '@/components/UploadModal';
 import { CreateCondominioModal } from '@/components/CreateCondominioModal';
+import { EditCondominioModal } from '@/components/EditCondominioModal';
+import { LLMSettingsDialog } from '@/components/LLMSettingsDialog';
 import { AdminActions } from '@/components/AdminActions';
+import { useIsAdmin } from '@/hooks/useRoles';
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -19,6 +22,11 @@ const Index = () => {
   const navigate = useNavigate();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [createCondominioModalOpen, setCreateCondominioModalOpen] = useState(false);
+  const [editCondominioModalOpen, setEditCondominioModalOpen] = useState(false);
+  const [llmSettingsOpen, setLlmSettingsOpen] = useState(false);
+  const [selectedCondominio, setSelectedCondominio] = useState<any>(null);
+
+  const isAdmin = useIsAdmin();
 
   // Fetch data with React Query
   const { data: condominios, isLoading: condominiosLoading, error: condominiosError } = useCondominios();
@@ -76,15 +84,28 @@ const Index = () => {
                 <p className="text-sm font-medium text-foreground">Bem-vindo!</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </Button>
+              <div className="flex gap-2">
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setLlmSettingsOpen(true)}
+                    className="gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Configurar LLM
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sair
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -196,12 +217,11 @@ const Index = () => {
               condominios.map((condominio) => (
                 <Card 
                   key={condominio.id}
-                  className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-200 cursor-pointer"
-                  onClick={() => navigate(`/condominio/${condominio.id}`)}
+                  className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-200"
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1">
+                      <div className="space-y-1 flex-1 cursor-pointer" onClick={() => navigate(`/condominio/${condominio.id}`)}>
                         <CardTitle className="text-lg">{condominio.nome}</CardTitle>
                         <CardDescription>
                           {condominio.cnpj ? `CNPJ: ${condominio.cnpj}` : 'CNPJ não informado'}
@@ -211,7 +231,7 @@ const Index = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-sm mb-4">
                       <span className="text-muted-foreground">Criado em:</span>
                       <span className="font-medium">
                         {new Date(condominio.created_at).toLocaleDateString('pt-BR', {
@@ -219,6 +239,34 @@ const Index = () => {
                           year: 'numeric'
                         })}
                       </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => navigate(`/condominio/${condominio.id}`)}
+                        className="flex-1"
+                        size="sm"
+                      >
+                        Ver Detalhes
+                      </Button>
+                      {isAdmin && (
+                        <Button 
+                          onClick={() => {
+                            setSelectedCondominio(condominio);
+                            setEditCondominioModalOpen(true);
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                          Editar
+                        </Button>
+                      )}
+                      <AdminActions 
+                        type="condominio"
+                        id={condominio.id}
+                        name={condominio.nome}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -261,6 +309,17 @@ const Index = () => {
       <CreateCondominioModal 
         open={createCondominioModalOpen}
         onOpenChange={setCreateCondominioModalOpen}
+      />
+      
+      <EditCondominioModal 
+        open={editCondominioModalOpen}
+        onOpenChange={setEditCondominioModalOpen}
+        condominio={selectedCondominio}
+      />
+      
+      <LLMSettingsDialog 
+        open={llmSettingsOpen}
+        onOpenChange={setLlmSettingsOpen}
       />
     </div>
   );

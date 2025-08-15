@@ -207,7 +207,10 @@ Formato de resposta em JSON:
 
     // Update status to error if we have prestacaoId
     try {
-      const { prestacaoId } = await req.json();
+      const bodyText = await req.text();
+      const body = JSON.parse(bodyText);
+      const prestacaoId = body.prestacaoId;
+      
       if (prestacaoId) {
         const supabase = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
