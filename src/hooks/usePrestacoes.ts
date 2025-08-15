@@ -91,3 +91,40 @@ export const useUpdatePrestacaoStatus = () => {
     },
   });
 };
+
+export const useDeletePrestacao = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('prestacoes_contas')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prestacoes'] });
+    },
+  });
+};
+
+export const useAnalyzePrestacao = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (prestacaoId: string) => {
+      const { data, error } = await supabase.functions.invoke('analyze-accounts', {
+        body: { prestacaoId }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prestacoes'] });
+      queryClient.invalidateQueries({ queryKey: ['relatorios'] });
+    },
+  });
+};

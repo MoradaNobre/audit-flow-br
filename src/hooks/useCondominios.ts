@@ -66,19 +66,25 @@ export const useCreateCondominio = () => {
         .single();
 
       if (error) throw error;
-
-      // Create association between user and condominio
-      const { error: associationError } = await supabase
-        .from('associacoes_usuarios_condominios')
-        .insert([{
-          user_id: user.id,
-          condominio_id: data.id,
-          papel: 'administrador'
-        }]);
-
-      if (associationError) throw associationError;
-
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['condominios'] });
+    },
+  });
+};
+
+export const useDeleteCondominio = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('condominios')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['condominios'] });

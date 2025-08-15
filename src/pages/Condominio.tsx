@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle } from 'lucide-react';
 import { UploadModal } from '@/components/UploadModal';
+import { AdminActions } from '@/components/AdminActions';
 import { useCondominio } from '@/hooks/useCondominios';
 import { usePrestacoes } from '@/hooks/usePrestacoes';
 
@@ -232,20 +233,31 @@ export default function Condominio() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        {prestacao.status_analise === 'concluido' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/relatorio/${prestacao.id}`);
+                        <div className="flex gap-2 justify-center">
+                          {prestacao.status_analise === 'concluido' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/relatorio/${prestacao.id}`);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                              Ver Relatório
+                            </Button>
+                          )}
+                          <AdminActions 
+                            type="prestacao"
+                            id={prestacao.id}
+                            name={`${prestacao.mes_referencia}/${prestacao.ano_referencia}`}
+                            onAnalyze={() => {
+                              // Refresh data after analysis
+                              window.location.reload();
                             }}
-                          >
-                            <Eye className="h-4 w-4" />
-                            Ver Relatório
-                          </Button>
-                        )}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

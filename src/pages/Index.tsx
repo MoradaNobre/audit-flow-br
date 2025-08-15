@@ -11,6 +11,7 @@ import { useCondominios } from '@/hooks/useCondominios';
 import { usePrestacoes } from '@/hooks/usePrestacoes';
 import { UploadModal } from '@/components/UploadModal';
 import { CreateCondominioModal } from '@/components/CreateCondominioModal';
+import { AdminActions } from '@/components/AdminActions';
 
 const Index = () => {
   const { user, signOut } = useAuth();
