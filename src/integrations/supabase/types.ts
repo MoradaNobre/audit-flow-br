@@ -143,6 +143,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nome_completo: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_completo?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_completo?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       relatorios_auditoria: {
         Row: {
           conteudo_gerado: Json | null
@@ -175,12 +196,44 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_condominios: {
+        Args: { user_uuid: string }
+        Returns: string[]
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
+      user_has_condominio_access: {
+        Args: { cond_id: string; user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       analysis_status: "pendente" | "processando" | "concluido" | "erro"
