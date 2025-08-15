@@ -7,6 +7,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper to robustly extract a JSON object from LLM text
+function extractJsonObject(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch (_) {}
+
+  // Look for fenced code blocks ```json ... ``` or ``` ... ```
+  const fenced = text.match(/```json([\s\S]*?)```/i) || text.match(/```([\s\S]*?)```/i);
+  if (fenced && fenced[1]) {
+    const candidate = fenced[1].trim();
+    try { return JSON.parse(candidate); } catch (_) {}
+  }
+
+  // Heuristic: take substring between first { and last }
+  const first = text.indexOf('{');
+  const last = text.lastIndexOf('}');
+  if (first !== -1 && last !== -1 && last > first) {
+    const candidate = text.substring(first, last + 1);
+    try { return JSON.parse(candidate); } catch (_) {}
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -123,7 +147,9 @@ Formato de resposta em JSON:
       const text = (geminiJson.candidates?.[0]?.content?.parts || [])
         .map((p: any) => p.text)
         .join('');
-      analysisResult = JSON.parse(text);
+      const parsed = extractJsonObject(text);
+      if (!parsed) throw new Error('Resposta da LLM (Gemini) não pôde ser interpretada como JSON');
+      analysisResult = parsed;
     } else {
       const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
       if (!openAIApiKey) throw new Error('OpenAI API key não configurada');
@@ -146,7 +172,10 @@ Formato de resposta em JSON:
       });
       if (!response.ok) throw new Error(`Erro na API OpenAI: ${response.status}`);
       const aiResponse = await response.json();
-      analysisResult = JSON.parse(aiResponse.choices[0].message.content);
+      const content = aiResponse.choices?.[0]?.message?.content ?? '';
+      const parsed = extractJsonObject(content);
+      if (!parsed) throw new Error('Resposta da LLM (OpenAI) não pôde ser interpretada como JSON');
+      analysisResult = parsed;
     }
 
     console.log('Análise concluída:', analysisResult);
