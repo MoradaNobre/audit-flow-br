@@ -285,7 +285,15 @@ export type Database = {
     }
     Enums: {
       analysis_status: "pendente" | "processando" | "concluido" | "erro"
-      criticism_level: "baixa" | "media" | "alta"
+      criticism_level:
+        | "baixa"
+        | "baixo"
+        | "media"
+        | "médio"
+        | "medio"
+        | "alta"
+        | "alto"
+      criticism_level_old: "baixa" | "media" | "alta"
       inconsistency_type: "financeira" | "conformidade" | "documental"
       user_role: "administrador" | "condomino_auditor"
     }
@@ -416,7 +424,16 @@ export const Constants = {
   public: {
     Enums: {
       analysis_status: ["pendente", "processando", "concluido", "erro"],
-      criticism_level: ["baixa", "media", "alta"],
+      criticism_level: [
+        "baixa",
+        "baixo",
+        "media",
+        "médio",
+        "medio",
+        "alta",
+        "alto",
+      ],
+      criticism_level_old: ["baixa", "media", "alta"],
       inconsistency_type: ["financeira", "conformidade", "documental"],
       user_role: ["administrador", "condomino_auditor"],
     },

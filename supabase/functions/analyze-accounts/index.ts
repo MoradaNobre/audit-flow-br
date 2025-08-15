@@ -287,12 +287,20 @@ GERE VALORES REALISTAS para um condomínio típico brasileiro e identifique 1-3 
 
     // Insert inconsistencies if any
     if (analysisResult.inconsistencias && analysisResult.inconsistencias.length > 0) {
-      const inconsistencias = analysisResult.inconsistencias.map((inc: any) => ({
-        relatorio_id: relatorio.id,
-        tipo: inc.tipo,
-        descricao: inc.descricao,
-        nivel_criticidade: inc.nivel_criticidade
-      }));
+      const inconsistencias = analysisResult.inconsistencias.map((inc: any) => {
+        // Mapear níveis de criticidade para garantir compatibilidade
+        let nivelCriticidade = inc.nivel_criticidade?.toLowerCase();
+        if (nivelCriticidade === 'baixo') nivelCriticidade = 'baixa';
+        if (nivelCriticidade === 'médio' || nivelCriticidade === 'medio') nivelCriticidade = 'media';
+        if (nivelCriticidade === 'alto') nivelCriticidade = 'alta';
+        
+        return {
+          relatorio_id: relatorio.id,
+          tipo: inc.tipo,
+          descricao: inc.descricao,
+          nivel_criticidade: nivelCriticidade || 'media'
+        };
+      });
 
       const { error: inconsistenciasError } = await supabase
         .from('inconsistencias')

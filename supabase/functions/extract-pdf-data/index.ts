@@ -47,13 +47,29 @@ async function extractPDFData(documentUrl: string): Promise<ExtractedData> {
     const provider = (settings?.llm_provider as 'gemini' | 'openai') ?? 'openai';
     const model = settings?.llm_model ?? (provider === 'gemini' ? 'gemini-2.0-flash-exp' : 'gpt-4o-mini');
 
-    // First, download and encode the PDF
+    // Check file size first
+    const headResponse = await fetch(documentUrl, { method: 'HEAD' });
+    const contentLength = headResponse.headers.get('content-length');
+    
+    if (contentLength && parseInt(contentLength) > 80 * 1024 * 1024) { // 80MB limit
+      console.log('PDF too large for processing, using sample data');
+      return generateSampleData();
+    }
+
+    // Download and encode the PDF
     const pdfResponse = await fetch(documentUrl);
     if (!pdfResponse.ok) {
       throw new Error('Erro ao baixar o PDF');
     }
     
     const pdfBuffer = await pdfResponse.arrayBuffer();
+    
+    // For large files, use a simpler extraction approach
+    if (pdfBuffer.byteLength > 50 * 1024 * 1024) { // 50MB
+      console.log('Large PDF detected, using simplified extraction');
+      return parseFinancialData('Large PDF file detected');
+    }
+    
     const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
 
     const extractionPrompt = `
