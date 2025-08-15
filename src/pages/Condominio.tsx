@@ -16,6 +16,7 @@ import { usePrestacoes } from '@/hooks/usePrestacoes';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 
 type StatusType = 'pendente' | 'processando' | 'concluido' | 'erro';
 
@@ -54,6 +55,7 @@ export default function Condominio() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { canCreatePrestacoes } = usePermissions();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   
   // Estados para filtros e ordenação
@@ -233,14 +235,16 @@ export default function Condominio() {
                 <p className="text-sm font-medium text-foreground">{user?.email}</p>
               </div>
               <ThemeToggle />
-              <Button 
-                onClick={() => setUploadModalOpen(true)}
-                className="gap-2"
-                disabled={!condominio}
-              >
-                <Upload className="h-4 w-4" />
-                Novo Upload
-              </Button>
+              {canCreatePrestacoes && (
+                <Button 
+                  onClick={() => setUploadModalOpen(true)}
+                  className="gap-2"
+                  disabled={!condominio}
+                >
+                  <Upload className="h-4 w-4" />
+                  Novo Upload
+                </Button>
+              )}
             </div>
           </div>
         </div>
