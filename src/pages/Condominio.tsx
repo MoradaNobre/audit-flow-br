@@ -17,6 +17,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatFileSize } from '@/lib/formatFileSize';
 
 type StatusType = 'pendente' | 'processando' | 'concluido' | 'erro';
 
@@ -432,10 +433,7 @@ export default function Condominio() {
                          {new Date(prestacao.created_at).toLocaleDateString('pt-BR')}
                        </TableCell>
                        <TableCell>
-                         {prestacao.arquivo_tamanho ? 
-                           `${(prestacao.arquivo_tamanho / 1024 / 1024).toFixed(2)} MB` : 
-                           'N/A'
-                         }
+                         {formatFileSize(prestacao.arquivo_tamanho)}
                        </TableCell>
                        <TableCell>
                          <Badge className={getStatusColor(prestacao.status_analise)}>
