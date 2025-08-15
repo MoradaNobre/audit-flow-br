@@ -5,18 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Upload, Eye, BarChart3, Building2 } from 'lucide-react';
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle } from 'lucide-react';
 import { UploadModal } from '@/components/UploadModal';
+import { useCondominio } from '@/hooks/useCondominios';
+import { usePrestacoes } from '@/hooks/usePrestacoes';
 
 type StatusType = 'pendente' | 'processando' | 'concluido' | 'erro';
-
-interface PrestacaoContas {
-  id: string;
-  mesReferencia: number;
-  anoReferencia: number;
-  dataUpload: string;
-  status: StatusType;
-}
 
 const getStatusColor = (status: StatusType) => {
   switch (status) {
@@ -48,55 +43,21 @@ const getStatusText = (status: StatusType) => {
   }
 };
 
-const mockPrestacoes: PrestacaoContas[] = [
-  {
-    id: '1',
-    mesReferencia: 11,
-    anoReferencia: 2024,
-    dataUpload: '2024-12-01',
-    status: 'concluido'
-  },
-  {
-    id: '2',
-    mesReferencia: 10,
-    anoReferencia: 2024,
-    dataUpload: '2024-11-01',
-    status: 'concluido'
-  },
-  {
-    id: '3',
-    mesReferencia: 9,
-    anoReferencia: 2024,
-    dataUpload: '2024-10-01',
-    status: 'processando'
-  },
-  {
-    id: '4',
-    mesReferencia: 8,
-    anoReferencia: 2024,
-    dataUpload: '2024-09-01',
-    status: 'pendente'
-  }
-];
-
-const mockCondominios = {
-  '1': { nome: 'Residencial Jardim das Flores', cnpj: '12.345.678/0001-90' },
-  '2': { nome: 'Condomínio Bella Vista', cnpj: '98.765.432/0001-10' },
-  '3': { nome: 'Edifício Central Park', cnpj: '11.222.333/0001-44' }
-};
-
 export default function Condominio() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-  const condominio = mockCondominios[id as keyof typeof mockCondominios];
+  // Fetch data with React Query
+  const { data: condominio, isLoading: condominioLoading, error: condominioError } = useCondominio(id || '');
+  const { data: prestacoes, isLoading: prestacoesLoading } = usePrestacoes(id);
 
-  if (!condominio) {
+  if (condominioError || (!condominioLoading && !condominio)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center space-y-4">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
           <h1 className="text-2xl font-bold text-foreground">Condomínio não encontrado</h1>
           <Button onClick={() => navigate('/')} variant="outline">
             Voltar ao Dashboard
@@ -106,8 +67,8 @@ export default function Condominio() {
     );
   }
 
-  const handleRowClick = (prestacao: PrestacaoContas) => {
-    if (prestacao.status === 'concluido') {
+  const handleRowClick = (prestacao: any) => {
+    if (prestacao.status_analise === 'concluido') {
       navigate(`/relatorio/${prestacao.id}`);
     }
   };
@@ -128,15 +89,27 @@ export default function Condominio() {
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
-                  <Building2 className="h-6 w-6 text-primary" />
+              {condominioLoading ? (
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div>
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-4 w-32 mt-1" />
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">{condominio.nome}</h1>
-                  <p className="text-sm text-muted-foreground">CNPJ: {condominio.cnpj}</p>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+                    <Building2 className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-foreground">{condominio?.nome}</h1>
+                    <p className="text-sm text-muted-foreground">
+                      {condominio?.cnpj ? `CNPJ: ${condominio.cnpj}` : 'CNPJ não informado'}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
@@ -145,6 +118,7 @@ export default function Condominio() {
               <Button 
                 onClick={() => setUploadModalOpen(true)}
                 className="gap-2"
+                disabled={!condominio}
               >
                 <Upload className="h-4 w-4" />
                 Novo Upload
@@ -163,7 +137,9 @@ export default function Condominio() {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{mockPrestacoes.length}</div>
+              <div className="text-2xl font-bold text-primary">
+                {prestacoesLoading ? '-' : prestacoes?.length || 0}
+              </div>
             </CardContent>
           </Card>
           
@@ -174,7 +150,7 @@ export default function Condominio() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
-                {mockPrestacoes.filter(p => p.status === 'concluido').length}
+                {prestacoesLoading ? '-' : prestacoes?.filter(p => p.status_analise === 'concluido').length || 0}
               </div>
             </CardContent>
           </Card>
@@ -186,7 +162,7 @@ export default function Condominio() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-500">
-                {mockPrestacoes.filter(p => p.status === 'processando').length}
+                {prestacoesLoading ? '-' : prestacoes?.filter(p => p.status_analise === 'processando').length || 0}
               </div>
             </CardContent>
           </Card>
@@ -198,7 +174,7 @@ export default function Condominio() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-500">
-                {mockPrestacoes.filter(p => p.status === 'pendente').length}
+                {prestacoesLoading ? '-' : prestacoes?.filter(p => p.status_analise === 'pendente').length || 0}
               </div>
             </CardContent>
           </Card>
@@ -223,45 +199,67 @@ export default function Condominio() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockPrestacoes.map((prestacao) => (
-                  <TableRow 
-                    key={prestacao.id}
-                    className={`transition-colors ${
-                      prestacao.status === 'concluido' 
-                        ? 'cursor-pointer hover:bg-muted/50' 
-                        : ''
-                    }`}
-                    onClick={() => handleRowClick(prestacao)}
-                  >
-                    <TableCell className="font-medium">
-                      {prestacao.mesReferencia.toString().padStart(2, '0')}/{prestacao.anoReferencia}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(prestacao.dataUpload).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(prestacao.status)}>
-                        {getStatusText(prestacao.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {prestacao.status === 'concluido' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/relatorio/${prestacao.id}`);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                          Ver Relatório
-                        </Button>
-                      )}
+                {prestacoesLoading ? (
+                  // Loading rows
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                      <TableCell><Skeleton className="h-8 w-24 mx-auto" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : prestacoes && prestacoes.length > 0 ? (
+                  prestacoes.map((prestacao) => (
+                    <TableRow 
+                      key={prestacao.id}
+                      className={`transition-colors ${
+                        prestacao.status_analise === 'concluido' 
+                          ? 'cursor-pointer hover:bg-muted/50' 
+                          : ''
+                      }`}
+                      onClick={() => handleRowClick(prestacao)}
+                    >
+                      <TableCell className="font-medium">
+                        {prestacao.mes_referencia.toString().padStart(2, '0')}/{prestacao.ano_referencia}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(prestacao.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(prestacao.status_analise)}>
+                          {getStatusText(prestacao.status_analise)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {prestacao.status_analise === 'concluido' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/relatorio/${prestacao.id}`);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                            Ver Relatório
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      <div className="text-muted-foreground">
+                        <Upload className="h-8 w-8 mx-auto mb-2" />
+                        <p>Nenhuma prestação de contas encontrada</p>
+                        <p className="text-sm">Faça o primeiro upload para começar</p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -271,8 +269,7 @@ export default function Condominio() {
       <UploadModal 
         open={uploadModalOpen} 
         onOpenChange={setUploadModalOpen}
-        condominioId={id || ''}
-        condominioNome={condominio.nome}
+        condominios={condominio ? [condominio] : []}
       />
     </div>
   );

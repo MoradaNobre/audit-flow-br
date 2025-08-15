@@ -6,27 +6,30 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, X, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCreatePrestacao } from '@/hooks/usePrestacoes';
+import { Condominio } from '@/hooks/useCondominios';
 
 interface UploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  condominioId: string;
-  condominioNome: string;
+  condominios: Condominio[];
 }
 
 export const UploadModal: React.FC<UploadModalProps> = ({
   open,
   onOpenChange,
-  condominioId,
-  condominioNome
+  condominios
 }) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [condominioId, setCondominioId] = useState<string>('');
   const [mes, setMes] = useState<string>('');
   const [ano, setAno] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+
+  const createPrestacao = useCreatePrestacao();
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -90,31 +93,54 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   const simulateUpload = async () => {
+    if (!condominioId) {
+      toast({
+        variant: "destructive",
+        title: "Condomínio não selecionado",
+        description: "Por favor, selecione um condomínio."
+      });
+      return;
+    }
+
     setUploading(true);
     setUploadProgress(0);
 
-    // Simular progresso de upload
-    for (let i = 0; i <= 100; i += 10) {
-      setUploadProgress(i);
-      await new Promise(resolve => setTimeout(resolve, 200));
+    try {
+      // Simular progresso de upload
+      for (let i = 0; i <= 100; i += 10) {
+        setUploadProgress(i);
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      // Criar prestação no banco
+      await createPrestacao.mutateAsync({
+        condominio_id: condominioId,
+        mes_referencia: parseInt(mes),
+        ano_referencia: parseInt(ano),
+        arquivo_url: `uploads/${selectedFile?.name || 'documento.pdf'}`
+      });
+
+      toast({
+        title: "Upload concluído!",
+        description: "A prestação de contas foi enviada para análise. Você será notificado quando estiver pronta."
+      });
+
+      // Reset form
+      resetForm();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro no upload",
+        description: error.message || "Tente novamente."
+      });
+      setUploading(false);
+      setUploadProgress(0);
     }
-
-    toast({
-      title: "Upload concluído!",
-      description: "A prestação de contas foi enviada para análise. Você será notificado quando estiver pronta."
-    });
-
-    // Reset form
-    setSelectedFile(null);
-    setMes('');
-    setAno('');
-    setUploading(false);
-    setUploadProgress(0);
-    onOpenChange(false);
   };
 
   const handleSubmit = () => {
-    if (!selectedFile || !mes || !ano) {
+    if (!selectedFile || !mes || !ano || !condominioId) {
       toast({
         variant: "destructive",
         title: "Campos obrigatórios",
@@ -128,6 +154,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
   const resetForm = () => {
     setSelectedFile(null);
+    setCondominioId('');
     setMes('');
     setAno('');
     setUploading(false);
@@ -145,11 +172,33 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             Novo Upload de Documento
           </DialogTitle>
           <DialogDescription>
-            Envie a prestação de contas para <span className="font-medium text-foreground">{condominioNome}</span>
+            Envie uma prestação de contas para análise automatizada
+            {condominios.length === 0 && (
+              <span className="block text-orange-600 mt-1">
+                Você precisa criar um condomínio antes de fazer upload
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Condomínio Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="condominio">Condomínio</Label>
+            <Select value={condominioId} onValueChange={setCondominioId} disabled={uploading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o condomínio" />
+              </SelectTrigger>
+              <SelectContent>
+                {condominios.map((condominio) => (
+                  <SelectItem key={condominio.id} value={condominio.id}>
+                    {condominio.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Upload Area */}
           <div className="space-y-2">
             <Label>Arquivo PDF da Prestação de Contas</Label>
@@ -280,7 +329,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={uploading || !selectedFile || !mes || !ano}
+              disabled={uploading || !selectedFile || !mes || !ano || !condominioId || condominios.length === 0}
               className="flex-1 gap-2"
             >
               {uploading ? (
