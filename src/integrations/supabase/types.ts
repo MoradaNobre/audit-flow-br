@@ -223,6 +223,130 @@ export type Database = {
           },
         ]
       }
+      processing_history: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          message: string | null
+          new_status: "pending" | "processing" | "completed" | "failed" | "cancelled"
+          previous_status: "pending" | "processing" | "completed" | "failed" | "cancelled" | null
+          queue_id: string
+          stage: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          message?: string | null
+          new_status: "pending" | "processing" | "completed" | "failed" | "cancelled"
+          previous_status?: "pending" | "processing" | "completed" | "failed" | "cancelled" | null
+          queue_id: string
+          stage?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          message?: string | null
+          new_status?: "pending" | "processing" | "completed" | "failed" | "cancelled"
+          previous_status?: "pending" | "processing" | "completed" | "failed" | "cancelled" | null
+          queue_id?: string
+          stage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_history_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "processing_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processing_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_stage: string
+          error_details: Json | null
+          error_message: string | null
+          extracted_data: Json | null
+          file_name: string
+          file_size: number
+          file_url: string
+          id: string
+          max_retries: number
+          prestacao_id: string
+          priority: "low" | "normal" | "high" | "urgent"
+          processing_logs: Json
+          progress_percentage: number
+          retry_count: number
+          stage_message: string | null
+          started_at: string | null
+          status: "pending" | "processing" | "completed" | "failed" | "cancelled"
+          storage_provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_stage?: string
+          error_details?: Json | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_name: string
+          file_size: number
+          file_url: string
+          id?: string
+          max_retries?: number
+          prestacao_id: string
+          priority?: "low" | "normal" | "high" | "urgent"
+          processing_logs?: Json
+          progress_percentage?: number
+          retry_count?: number
+          stage_message?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["processing_status"]
+          storage_provider?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_stage?: string
+          error_details?: Json | null
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_name?: string
+          file_size?: number
+          file_url?: string
+          id?: string
+          max_retries?: number
+          prestacao_id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          processing_logs?: Json
+          progress_percentage?: number
+          retry_count?: number
+          stage_message?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["processing_status"]
+          storage_provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_queue_prestacao_id_fkey"
+            columns: ["prestacao_id"]
+            isOneToOne: false
+            referencedRelation: "prestacoes_contas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -295,6 +419,8 @@ export type Database = {
         | "alto"
       criticism_level_old: "baixa" | "media" | "alta"
       inconsistency_type: "financeira" | "conformidade" | "documental"
+      processing_status: "pending" | "processing" | "completed" | "failed" | "cancelled"
+      task_priority: "low" | "normal" | "high" | "urgent"
       user_role: "administrador" | "condomino_auditor"
     }
     CompositeTypes: {

@@ -1,10 +1,9 @@
+/* AuditFlow Design System - Cores e tokens semânticos otimizados para auditoria */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* AuditFlow Design System - Cores e tokens semânticos otimizados para auditoria */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -206,6 +205,23 @@
   
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-[1.02];
+  }
+  
+  /* Upload Modal Styles */
+  .upload-modal-content {
+    @apply max-h-[90vh] overflow-hidden flex flex-col;
+  }
+  
+  .upload-modal-body {
+    @apply flex-1 overflow-y-auto px-1 py-2 min-h-0;
+    max-height: calc(90vh - 200px); /* Reservar espaço para header e actions */
+  }
+  
+  .upload-modal-actions {
+    @apply flex-shrink-0 border-t border-border/20 pt-4 mt-4 bg-card/95 backdrop-blur-sm;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
   }
 }
 

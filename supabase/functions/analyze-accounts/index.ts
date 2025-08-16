@@ -2,6 +2,41 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
+// Tipos para validação financeira (copiados do frontend)
+interface ValidationResult {
+  isValid: boolean;
+  score: number;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+  summary: ValidationSummary;
+}
+
+interface ValidationError {
+  type: string;
+  message: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  field?: string;
+  expectedValue?: number;
+  actualValue?: number;
+  difference?: number;
+}
+
+interface ValidationWarning {
+  type: string;
+  message: string;
+  field?: string;
+  value?: number;
+  suggestion?: string;
+}
+
+interface ValidationSummary {
+  totalChecks: number;
+  passedChecks: number;
+  failedChecks: number;
+  warningsCount: number;
+  overallHealth: 'excellent' | 'good' | 'fair' | 'poor';
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -67,7 +102,10 @@ serve(async (req) => {
     // Update status to processing
     await supabase
       .from('prestacoes_contas')
-      .update({ status_analise: 'processando' })
+      .update({ 
+        status_analise: 'processando',
+        updated_at: new Date().toISOString()
+      })
       .eq('id', prestacaoId);
 
     console.log('Iniciando análise para prestação:', prestacaoId);

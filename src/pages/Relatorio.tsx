@@ -38,45 +38,50 @@ interface RelatorioAuditoriaExtended {
 }
 
 const mockRelatorio = {
-  resumo: "Análise da prestação de contas de janeiro/2025 do Morada Nobre",
-  situacao_geral: "Situação financeira estável com pequenas inconsistências",
+  resumo: "Análise da prestação de contas de janeiro/2025 do Residencial Vila Verde",
+  situacao_geral: "Gestão financeira eficiente com excelente controle de gastos",
   resumo_financeiro: {
-    balanco_total: 45750.80,
-    total_despesas: 42300.50,
-    maior_gasto: 15200.00,
-    categoria_maior_gasto: "Manutenção Predial",
-    saldo_final: 3450.30
+    balanco_total: 127850.00,
+    total_despesas: 89640.75,
+    maior_gasto: 28500.00,
+    categoria_maior_gasto: "Manutenção e Reformas",
+    saldo_final: 38209.25
   },
   distribuicao_despesas: [
-    { categoria: "Manutenção", valor: 15200 },
-    { categoria: "Limpeza", valor: 8500 },
-    { categoria: "Segurança", valor: 7200 },
-    { categoria: "Energia", valor: 5800 },
-    { categoria: "Água", valor: 3200 },
-    { categoria: "Administração", valor: 2400 }
+    { categoria: "Manutenção", valor: 28500 },
+    { categoria: "Limpeza", valor: 18200 },
+    { categoria: "Segurança", valor: 15800 },
+    { categoria: "Energia", valor: 12400 },
+    { categoria: "Água", valor: 8900 },
+    { categoria: "Administração", valor: 5840 }
   ],
   distribuicao_percentual: [
-    { categoria: "Manutenção Predial", valor: 35.9, cor: "#8884d8" },
-    { categoria: "Limpeza", valor: 20.1, cor: "#82ca9d" },
-    { categoria: "Segurança", valor: 17.0, cor: "#ffc658" },
-    { categoria: "Administração", valor: 13.7, cor: "#ff7c7c" },
-    { categoria: "Energia Elétrica", valor: 7.6, cor: "#8dd1e1" },
-    { categoria: "Outros", valor: 5.7, cor: "#d084d0" }
+    { categoria: "Manutenção e Reformas", valor: 31.8, cor: "#8884d8" },
+    { categoria: "Limpeza e Conservação", valor: 20.3, cor: "#82ca9d" },
+    { categoria: "Segurança Patrimonial", valor: 17.6, cor: "#ffc658" },
+    { categoria: "Energia Elétrica", valor: 13.8, cor: "#8dd1e1" },
+    { categoria: "Abastecimento de Água", valor: 9.9, cor: "#ff7c7c" },
+    { categoria: "Taxa Administrativa", valor: 6.5, cor: "#d084d0" }
   ],
   inconsistencias: [
     {
       tipo: "Financeira",
-      descricao: "Valor de despesa com manutenção 15% acima da média histórica",
-      nivel_criticidade: "médio"
+      descricao: "Gasto com energia elétrica 8% abaixo da média, indicando economia eficiente",
+      nivel_criticidade: "baixo"
     },
     {
       tipo: "Conformidade",
-      descricao: "Ausência de três recibos de prestadores de serviços",
-      nivel_criticidade: "alto"
+      descricao: "Documentação completa e organizada conforme normas contábeis",
+      nivel_criticidade: "baixo"
+    },
+    {
+      tipo: "Financeira",
+      descricao: "Reserva de emergência mantida em 30% do orçamento mensal",
+      nivel_criticidade: "baixo"
     }
   ],
   periodo: "01/2025",
-  condominio: "Morada Nobre"
+  condominio: "Residencial Vila Verde"
 };
 
 const getCriticidadeColor = (nivel: string) => {

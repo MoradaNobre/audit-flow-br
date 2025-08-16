@@ -39,8 +39,8 @@ export const AdminActions = ({ type, id, name, onAnalyze, statusAnalise }: Admin
                    (type === 'prestacao' && isAdmin) ||
                    (type === 'relatorio' && canDeleteRelatorios);
                    
-  // Só mostra botão analisar se não está pendente (evita duplicação)
-  const canAnalyze = type === 'prestacao' && canAnalyzePrestacoes && statusAnalise !== 'pendente';
+  // Só mostra botão analisar se está pendente (não mostrar se já concluído)
+  const canAnalyze = type === 'prestacao' && canAnalyzePrestacoes && statusAnalise === 'pendente';
 
   // Se não tem nenhuma permissão, não mostra os botões
   if (!canDelete && !canAnalyze) return null;

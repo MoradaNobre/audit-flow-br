@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Upload, Eye, BarChart3, Building2, AlertCircle, Download, Search, Filter, ChevronUp, ChevronDown, Play } from 'lucide-react';
 import { UploadModal } from '@/components/UploadModal';
 import { AdminActions } from '@/components/AdminActions';
+import { ValidationModal } from '@/components/ValidationModal';
 import { useCondominio } from '@/hooks/useCondominios';
 import { usePrestacoes, useAnalyzePrestacao } from '@/hooks/usePrestacoes';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -58,6 +59,8 @@ export default function Condominio() {
   const { toast } = useToast();
   const { canCreatePrestacoes, canAnalyzePrestacoes } = usePermissions();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [validationModalOpen, setValidationModalOpen] = useState(false);
+  const [selectedPrestacaoForValidation, setSelectedPrestacaoForValidation] = useState<any>(null);
   
   // Estados para filtros e ordenação
   const [searchTerm, setSearchTerm] = useState('');
@@ -500,6 +503,21 @@ export default function Condominio() {
                                Ver Relatório
                              </Button>
                            )}
+                           {prestacao.status_analise === 'concluido' && (
+                             <Button
+                               size="sm"
+                               variant="secondary"
+                               className="gap-2"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 setSelectedPrestacaoForValidation(prestacao);
+                                 setValidationModalOpen(true);
+                               }}
+                             >
+                               <BarChart3 className="h-4 w-4" />
+                               Ver Validação
+                             </Button>
+                           )}
                            <AdminActions 
                              type="prestacao"
                              id={prestacao.id}
@@ -533,8 +551,20 @@ export default function Condominio() {
       <UploadModal 
         open={uploadModalOpen} 
         onOpenChange={setUploadModalOpen}
-        condominios={condominio ? [condominio] : []}
       />
+      
+      {selectedPrestacaoForValidation && (
+        <ValidationModal
+          open={validationModalOpen}
+          onOpenChange={setValidationModalOpen}
+          prestacaoId={selectedPrestacaoForValidation.id}
+          prestacaoInfo={{
+            mes: selectedPrestacaoForValidation.mes_referencia,
+            ano: selectedPrestacaoForValidation.ano_referencia,
+            status: selectedPrestacaoForValidation.status_analise
+          }}
+        />
+      )}
     </div>
   );
 }
