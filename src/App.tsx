@@ -11,6 +11,7 @@ import Condominio from "./pages/Condominio";
 import Relatorio from "./pages/Relatorio";
 import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
+import InconsistenciasTeste from "./pages/InconsistenciasTeste";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,11 @@ const App = () => (
             <Route path="/relatorio/:id" element={
               <ProtectedRoute>
                 <Relatorio />
+              </ProtectedRoute>
+            } />
+            <Route path="/relatorio/:id/teste-inconsistencias" element={
+              <ProtectedRoute>
+                <InconsistenciasTeste />
               </ProtectedRoute>
             } />
             <Route path="/users" element={

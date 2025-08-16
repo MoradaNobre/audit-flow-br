@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -261,6 +261,9 @@ export default function Relatorio() {
               </div>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
+                <Button variant="outline" asChild className="gap-2">
+                  <Link to={`/relatorio/${id}/teste-inconsistencias`}>Ver inconsistências (texto)</Link>
+                </Button>
                 <Button onClick={exportToPDF} className="gap-2">
                   <Download className="h-4 w-4" />
                   Exportar PDF
