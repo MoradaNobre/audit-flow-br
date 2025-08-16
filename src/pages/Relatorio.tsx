@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, BarChart3, PieChart, AlertTriangle, CheckCircle, Download } from 'lucide-react';
 import { Cell, Pie, PieChart as RechartsPieChart, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useRelatorio as useRelatorioDatabase } from '@/hooks/useDatabase';
 import { useRelatorio } from '@/hooks/useRelatorios';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -17,6 +18,23 @@ interface InconsistenciaType {
   descricao: string;
   tipo: 'financeira' | 'conformidade';
   nivel_criticidade: 'baixo' | 'médio' | 'alto';
+}
+
+interface RelatorioAuditoriaExtended {
+  id: string;
+  prestacao_id: string;
+  resumo?: string;
+  conteudo_gerado?: any;
+  data_geracao: string;
+  prestacoes_contas?: {
+    condominio_id: string;
+    mes_referencia: number;
+    ano_referencia: number;
+    arquivo_url: string;
+    condominios?: {
+      nome: string;
+    };
+  };
 }
 
 const mockRelatorio = {
@@ -89,7 +107,8 @@ export default function Relatorio() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: relatorio, isLoading, error } = useRelatorio(id!);
+  const { data: relatorio, isLoading, error } = useRelatorio(id!) as { data: RelatorioAuditoriaExtended | null, isLoading: boolean, error: any };
+  const { data: relatorioCompleto, isLoading: loadingDatabase } = useRelatorioDatabase(id!);
 
   const exportToPDF = async () => {
     const element = document.getElementById('relatorio-content');
@@ -126,7 +145,12 @@ export default function Relatorio() {
         heightLeft -= pageHeight;
       }
       
-      const filename = `relatorio_auditoria_${reportData.condominio.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      // Generate filename using relatorio data
+      const condominio = relatorio?.prestacoes_contas?.condominios?.nome || 'relatorio';
+      const periodo = relatorio?.prestacoes_contas ? 
+        `${relatorio.prestacoes_contas.mes_referencia?.toString().padStart(2, '0')}_${relatorio.prestacoes_contas.ano_referencia}` : 
+        new Date().toISOString().split('T')[0];
+      const filename = `relatorio_auditoria_${condominio.replace(/\s+/g, '_')}_${periodo}.pdf`;
       pdf.save(filename);
       
       toast({ title: "PDF exportado com sucesso!" });
@@ -140,7 +164,7 @@ export default function Relatorio() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loadingDatabase) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center">
@@ -164,15 +188,42 @@ export default function Relatorio() {
     );
   }
 
-  // Use real data if available, fallback to mock for presentation
-  const reportData = relatorio?.conteudo_gerado && Object.keys(relatorio.conteudo_gerado).length > 0 
-    ? relatorio.conteudo_gerado 
-    : mockRelatorio;
+  // Use real data from database if available, then from relatorio, fallback to mock
+  let reportData = mockRelatorio;
+  let inconsistencias = mockRelatorio.inconsistencias;
+  
+  // Check if we have data from database (with inconsistencies)
+  if (relatorioCompleto?.relatorio?.conteudo_gerado && Object.keys(relatorioCompleto.relatorio.conteudo_gerado).length > 0) {
+    reportData = relatorioCompleto.relatorio.conteudo_gerado;
+    // Map database inconsistencias to expected format
+    inconsistencias = relatorioCompleto.inconsistencias?.map(inc => ({
+      tipo: inc.tipo === 'financeira' ? 'Financeira' : 'Conformidade',
+      descricao: inc.descricao,
+      nivel_criticidade: inc.nivel_criticidade === 'baixa' ? 'baixo' : 
+                        inc.nivel_criticidade === 'media' ? 'médio' : 'alto'
+    })) || [];
+  } 
+  // Check if we have data from relatorio hook
+  else if (relatorio?.conteudo_gerado && Object.keys(relatorio.conteudo_gerado).length > 0) {
+    reportData = relatorio.conteudo_gerado;
+  }
+
+  // Ensure we have periodo and condominio data from the relatorio
+  if (relatorio?.prestacoes_contas) {
+    const prestacao = relatorio.prestacoes_contas;
+    reportData = {
+      ...reportData,
+      periodo: `${prestacao.mes_referencia?.toString().padStart(2, '0')}/${prestacao.ano_referencia}`,
+      condominio: prestacao.condominios?.nome || reportData.condominio
+    };
+  }
 
   console.log('Dados do relatório:', {
     relatorio: relatorio,
-    conteudo_gerado: relatorio?.conteudo_gerado,
-    usando_dados_reais: !!(relatorio?.conteudo_gerado && Object.keys(relatorio.conteudo_gerado).length > 0)
+    relatorioCompleto: relatorioCompleto,
+    reportData: reportData,
+    inconsistencias: inconsistencias,
+    usando_dados_reais: !!(relatorioCompleto?.relatorio?.conteudo_gerado && Object.keys(relatorioCompleto.relatorio.conteudo_gerado).length > 0)
   });
 
   return (
@@ -330,9 +381,9 @@ export default function Relatorio() {
             <p className="text-muted-foreground">Ressalvas e pontos de atenção identificados pela auditoria automatizada</p>
           </div>
 
-          {reportData.inconsistencias && reportData.inconsistencias.length > 0 ? (
+          {inconsistencias && inconsistencias.length > 0 ? (
             <div className="space-y-4">
-              {reportData.inconsistencias.map((inconsistencia, index) => (
+              {inconsistencias.map((inconsistencia, index) => (
                 <Alert key={index} className="border-border/50 bg-card/50 backdrop-blur-sm">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="space-y-3">
