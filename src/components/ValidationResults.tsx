@@ -33,7 +33,7 @@ export function ValidationResults({ result, processingTime, className }: Validat
   const { summary, errors, warnings, score } = result;
   const errorsByType = analysisUtils.categorizeErrors(errors);
   const recommendations = analysisUtils.generateRecommendations(result);
-  const healthColor = analysisUtils.getHealthColor(summary.overallHealth);
+  const healthColor = analysisUtils.getHealthColor(summary?.overallHealth || 'fair');
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -61,7 +61,7 @@ export function ValidationResults({ result, processingTime, className }: Validat
             </div>
             <div className="text-sm text-muted-foreground">
               Status: <span className={cn("font-medium", healthColor)}>
-                {summary.overallHealth.toUpperCase()}
+                {(summary?.overallHealth || 'fair').toUpperCase()}
               </span>
             </div>
             <Progress value={score} className="w-full h-2" />
@@ -71,25 +71,25 @@ export function ValidationResults({ result, processingTime, className }: Validat
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
             <div className="text-center space-y-1">
               <div className="text-2xl font-bold text-green-600">
-                {summary.passedChecks}
+                {summary?.passedChecks || 0}
               </div>
               <div className="text-xs text-muted-foreground">Aprovados</div>
             </div>
             <div className="text-center space-y-1">
               <div className="text-2xl font-bold text-red-600">
-                {summary.failedChecks}
+                {summary?.failedChecks || 0}
               </div>
               <div className="text-xs text-muted-foreground">Reprovados</div>
             </div>
             <div className="text-center space-y-1">
               <div className="text-2xl font-bold text-yellow-600">
-                {warnings.length}
+                {warnings?.length || 0}
               </div>
               <div className="text-xs text-muted-foreground">Avisos</div>
             </div>
             <div className="text-center space-y-1">
               <div className="text-2xl font-bold text-blue-600">
-                {summary.totalChecks}
+                {summary?.totalChecks || 0}
               </div>
               <div className="text-xs text-muted-foreground">Total</div>
             </div>
@@ -138,17 +138,17 @@ export function ValidationResults({ result, processingTime, className }: Validat
       )}
 
       {/* Avisos */}
-      {warnings.length > 0 && (
+      {(warnings?.length || 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-yellow-600">
               <AlertTriangle className="h-4 w-4" />
-              Avisos ({warnings.length})
+              Avisos ({warnings?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {warnings.map((warning, index) => (
+              {(warnings || []).map((warning, index) => (
                 <div key={index} className="border-l-4 border-yellow-400 pl-4 py-2">
                   <div className="font-medium text-sm">
                     {getWarningTypeLabel(warning.type)}

@@ -118,11 +118,12 @@ export const analysisUtils = {
    * Categoriza erros por severidade
    */
   categorizeErrors: (errors: ValidationResult['errors']) => {
+    const safeErrors = errors || [];
     return {
-      critical: errors.filter(e => e.severity === 'critical'),
-      high: errors.filter(e => e.severity === 'high'),
-      medium: errors.filter(e => e.severity === 'medium'),
-      low: errors.filter(e => e.severity === 'low'),
+      critical: safeErrors.filter(e => e.severity === 'critical'),
+      high: safeErrors.filter(e => e.severity === 'high'),
+      medium: safeErrors.filter(e => e.severity === 'medium'),
+      low: safeErrors.filter(e => e.severity === 'low'),
     };
   },
 
@@ -130,11 +131,11 @@ export const analysisUtils = {
    * Gera resumo textual da validação
    */
   generateSummary: (result: ValidationResult): string => {
-    const { summary, errors, warnings } = result;
+    const { summary, errors = [], warnings = [] } = result;
     const errorsByType = analysisUtils.categorizeErrors(errors);
     
-    let summaryText = `Score: ${result.score}% (${summary.overallHealth.toUpperCase()})\n`;
-    summaryText += `Verificações: ${summary.passedChecks}/${summary.totalChecks} aprovadas\n`;
+    let summaryText = `Score: ${result.score}% (${summary?.overallHealth?.toUpperCase() || 'N/A'})\n`;
+    summaryText += `Verificações: ${summary?.passedChecks || 0}/${summary?.totalChecks || 0} aprovadas\n`;
     
     if (errorsByType.critical.length > 0) {
       summaryText += `❌ ${errorsByType.critical.length} erro(s) crítico(s)\n`;
@@ -167,7 +168,7 @@ export const analysisUtils = {
    */
   generateRecommendations: (result: ValidationResult): string[] => {
     const recommendations: string[] = [];
-    const { errors, warnings } = result;
+    const { errors = [], warnings = [] } = result;
     
     // Recomendações baseadas em erros críticos
     const criticalErrors = errors.filter(e => e.severity === 'critical');
