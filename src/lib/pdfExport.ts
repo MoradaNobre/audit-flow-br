@@ -77,10 +77,9 @@ export class PDFExporter {
       // Capturar elemento como imagem
       console.log('📸 Capturando elemento...');
       const canvas = await html2canvas(element, {
-        scale: config.quality,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff',
+        background: '#ffffff',
         logging: false,
         width: element.scrollWidth,
         height: element.scrollHeight

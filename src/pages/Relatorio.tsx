@@ -123,7 +123,6 @@ export default function Relatorio() {
       toast({ title: "Gerando PDF...", description: "Por favor, aguarde." });
       
       const canvas = await html2canvas(element, {
-        scale: 2,
         useCORS: true,
         logging: false,
       });

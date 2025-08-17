@@ -333,7 +333,6 @@ const Index = () => {
       <UploadModal 
         open={uploadModalOpen} 
         onOpenChange={setUploadModalOpen}
-        condominios={condominios || []}
       />
       
       <CreateCondominioModal 

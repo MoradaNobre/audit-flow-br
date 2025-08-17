@@ -15,7 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useProcessingStatus, ProcessingTask, ProcessingStatus } from '@/hooks/useProcessingStatus';
+import { useProcessingStatus, ProcessingTask, type ProcessingStatus } from '@/hooks/useProcessingStatus';
 import { formatFileSize } from '@/lib/fileValidation';
 
 interface ProcessingStatusProps {

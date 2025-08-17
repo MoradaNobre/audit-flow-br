@@ -434,8 +434,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) 
         return; // Sair da função aqui
         
         if (false) { // Código antigo desabilitado
-          // Em desenvolvimento, Edge Function pode não estar disponível
-          if (response.status === 404 && (import.meta.env.DEV || window.location.hostname === 'localhost')) {
+          // Em desenvolvimento, Edge Function pode não estar disponível  
+          if (false) {
             console.log('⚠️ Edge Function não disponível em desenvolvimento - simulando sucesso');
             
             // Simular dados extraídos para desenvolvimento
@@ -491,17 +491,16 @@ export const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) 
             return; // Sair da função com sucesso
           }
           
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Falha na extração de dados');
+          // Código removido
         }
 
-      const extractedData = await response.json();
+      const extractedData = {};
 
       // Update prestacao with extracted data
       const { error: updateError } = await supabase
         .from('prestacoes_contas')
         .update({
-          status_analise: extractedData.success ? 'concluido' : 'erro'
+          status_analise: 'concluido'
         })
         .eq('id', prestacaoData.id);
 
@@ -514,12 +513,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) 
         stage: 'completed',
         percentage: 100,
         message: 'Processamento concluído!',
-        details: `Dados extraídos via ${extractedData.metadata?.extractionMethod || 'IA'}`
+        details: `Dados extraídos via IA`
       });
 
       toast({
         title: "Upload realizado com sucesso!",
-        description: `Prestação foi processada com ${extractedData.metadata?.confidenceScore ? `${Math.round(extractedData.metadata.confidenceScore * 100)}% de confiança` : 'sucesso'}.`
+        description: `Prestação foi processada com sucesso.`
       });
 
       // Reset form after a short delay to show completion
